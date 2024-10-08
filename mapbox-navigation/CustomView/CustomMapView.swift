@@ -26,6 +26,13 @@ struct CustomMapView: UIViewRepresentable {
         return mapView
     }
     
+    fileprivate func setDefaultCameraPosition(_ currentRouteStepsSet: Set<Step>, _ uiView: MapView) {
+        if let latestLocation = locationManager.lastKnownLocation?.coordinate, currentRouteStepsSet.isEmpty {
+            let cameraOptions = CameraOptions(center: latestLocation, zoom: 15)
+            uiView.camera.ease(to: cameraOptions, duration: 1)
+        }
+    }
+    
     func updateUIView(_ uiView: MapView, context: Context) {
         let currentRouteStepsSet = Set(routeSteps)
         let previousRouteStepsSet = Set(context.coordinator.routeSteps)
@@ -34,13 +41,8 @@ struct CustomMapView: UIViewRepresentable {
             addSteps(to: uiView)
             addManeuverPins(to: uiView)
             context.coordinator.routeSteps = routeSteps
-        } else {
-            print("No changes to route steps, skipping update")
         }
-        if let latestLocation = locationManager.lastKnownLocation?.coordinate, currentRouteStepsSet.count == 0 {
-            let cameraOptions = CameraOptions(center: latestLocation, zoom: 15)
-            uiView.camera.ease(to: cameraOptions, duration: 1)
-        }
+        setDefaultCameraPosition(currentRouteStepsSet, uiView)
     }
     
     func makeCoordinator() -> Coordinator {
